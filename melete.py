@@ -21,7 +21,7 @@ async def read_items(
     csq: Annotated[list[str] | None, Query()] = None,
     id: str = "",
     gene: str = "",
-    chr: int = 0,
+    chr: str = "",
     start: int = 0,
     stop: int = 0,
     only_pass: bool = False,
@@ -31,7 +31,8 @@ async def read_items(
 ) -> list[dict]:
     return_dict = {}
     for base in variant_type:
-        df = pl.scan_parquet(f"./test_dataset/{base}_chr{chr}.parquet")
+        # df = pl.scan_parquet(f"./test_dataset/{base}_chr{chr}.parquet")
+        df = pl.scan_parquet(f"../Mneme/{base}/{chr}/variants.parquet")
         if id != "":
             df = df.filter(pl.col("id") == id)
         if csq is not None:
@@ -41,8 +42,8 @@ async def read_items(
         # if gnomad_regions:
         #     df = df.filter(pl.col("notCoveredByGnomad") == False)
         if in_gnomad:
-            df = df.filter(pl.col("in_gnomAD") == True)
+            df = df.filter(pl.col("inGnomad") == True)
         if pass_gnomad:
-            df = df.filter(pl.col("pass_gnomad") == True)
+            df = df.filter(pl.col("passGnomad") == True)
         return_dict[base] = df.collect().to_dicts()
     return [return_dict]
