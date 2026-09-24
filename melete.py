@@ -31,16 +31,15 @@ async def read_items(
 ) -> list[dict]:
     return_dict = {}
     for base in variant_type:
-        # df = pl.scan_parquet(f"./test_dataset/{base}_chr{chr}.parquet")
-        df = pl.scan_parquet(f"../Mneme/{base}/{chr}/variants.parquet")
+        df = pl.scan_parquet(f"../Mneme/{base}/{chr}/*.parquet")
         if id != "":
             df = df.filter(pl.col("id") == id)
         if csq is not None:
             df = df.filter(pl.col("CSQ") == csq)
         if only_pass:
             df = df.filter(pl.col("filter") == "PASS")
-        # if gnomad_regions:
-        #     df = df.filter(pl.col("notCoveredByGnomad") == False)
+        if gnomad_regions:
+            df = df.filter(pl.col("notCoveredByGnomad") == False)
         if in_gnomad:
             df = df.filter(pl.col("inGnomad") == True)
         if pass_gnomad:
