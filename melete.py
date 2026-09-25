@@ -42,12 +42,13 @@ async def read_items(
                 additional_filters.append(f"id = '{id}'")
             if only_pass:
                 additional_filters.append("FILTER = 'PASS'")
-            if gnomad_regions:
-                additional_filters.append("notCoveredByGnomad = False")
-            if in_gnomad:
-                additional_filters.append("inGnomad = True")
+            # Those are linked, use the bigger one instead of multiple at the same time.
             if pass_gnomad:
                 additional_filters.append("passGnomad = True")
+            elif in_gnomad:
+                additional_filters.append("inGnomad = True")
+            elif gnomad_regions:
+                additional_filters.append("notCoveredByGnomad = False")
 
             print(base_sql + f" WHERE {' AND '.join(additional_filters)}")
             if additional_filters == []:
