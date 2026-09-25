@@ -1,8 +1,10 @@
 ##########
 # IMPORT #
 ##########
+import os
 from typing import Annotated
 
+import duckdb
 import polars as pl
 from fastapi import FastAPI, Query
 
@@ -31,18 +33,31 @@ async def read_items(
 ) -> list[dict]:
     return_dict = {}
     for base in variant_type:
-        df = pl.scan_parquet(f"../Mneme/{base}/{chr}/*.parquet")
-        if id != "":
-            df = df.filter(pl.col("id") == id)
-        if csq is not None:
-            df = df.filter(pl.col("CSQ") == csq)
-        if only_pass:
-            df = df.filter(pl.col("filter") == "PASS")
-        if gnomad_regions:
-            df = df.filter(pl.col("notCoveredByGnomad") == False)
-        if in_gnomad:
-            df = df.filter(pl.col("inGnomad") == True)
-        if pass_gnomad:
-            df = df.filter(pl.col("passGnomad") == True)
-        return_dict[base] = df.collect().to_dicts()
+        if os.path.isdir(f"../Mneme/{base}/{chr}"):
+            # test = duckdb.sql(f"SELECT * FROM '../Mneme/{base}/{chr}/*.parquet'")
+            # print(test.pl().to_dicts())
+            base_sql = f"SELECT * FROM '../Mneme/{base}/{chr}/*.parquet'"
+            additional_filters = []
+            if id != "":
+                additional_filters.append(f"id = '{id}'")
+            if only_pass:
+                additional_filters.append("FILTER = 'PASS'")
+            if gnomad_regions:
+                additional_filters.append("notCoveredByGnomad = False")
+            if in_gnomad:
+                additional_filters.append("inGnomad = True")
+            if pass_gnomad:
+                additional_filters.append("passGnomad = True")
+
+            print(base_sql + f" WHERE {' AND '.join(additional_filters)}")
+            if additional_filters == []:
+                return_dict[base] = duckdb.sql(base_sql).pl().to_dicts()
+            else:
+                return_dict[base] = (
+                    duckdb.sql(base_sql + f" WHERE {' AND '.join(additional_filters)}")
+                    .pl()
+                    .to_dicts()
+                )
+        #     if id != "":
+        #         df = df.filter(pl.col("CSQ") == csq)
     return [return_dict]
