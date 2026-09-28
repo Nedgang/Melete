@@ -34,8 +34,6 @@ async def read_items(
     return_dict = {}
     for base in variant_type:
         if os.path.isdir(f"../Mneme/{base}/{chr}"):
-            # test = duckdb.sql(f"SELECT * FROM '../Mneme/{base}/{chr}/*.parquet'")
-            # print(test.pl().to_dicts())
             base_sql = f"SELECT * FROM '../Mneme/{base}/{chr}/*.parquet'"
             additional_filters = []
             if id != "":
@@ -59,6 +57,8 @@ async def read_items(
                     .pl()
                     .to_dicts()
                 )
+        else:
+            return_dict[base] = {}
         #     if id != "":
         #         df = df.filter(pl.col("CSQ") == csq)
     return [return_dict]
