@@ -20,10 +20,10 @@ app = FastAPI()
 @app.get("/query/")
 async def read_items(
     variant_type: Annotated[list[str] | None, Query()],
+    chr: str,
     csq: Annotated[list[str] | None, Query()] = None,
     id: str = "",
     gene: str = "",
-    chr: str = "",
     start: int = 0,
     stop: int = 0,
     only_pass: bool = False,
