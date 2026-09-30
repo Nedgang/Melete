@@ -40,6 +40,8 @@ async def read_items(
                 additional_filters.append(f"id = '{id}'")
             if only_pass:
                 additional_filters.append("FILTER = 'PASS'")
+            if start != 0 and stop != 0:
+                additional_filters.append(f"pos BETWEEN {start} AND {stop}")
             # Those are linked, use the bigger one instead of multiple at the same time.
             if pass_gnomad:
                 additional_filters.append("passGnomad = True")
