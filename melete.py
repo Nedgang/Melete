@@ -61,6 +61,4 @@ async def read_items(
                 )
         else:
             return_dict[base] = {}
-        #     if id != "":
-        #         df = df.filter(pl.col("CSQ") == csq)
     return [return_dict]
