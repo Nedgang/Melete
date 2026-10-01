@@ -81,13 +81,11 @@ async def read_items(
                         f"Feature IN {tuple([i.strip() for i in feature])}"
                     )
                 if gene != "":
-                    print(gene)
                     additional_filters.append(f"SYMBOL = '{gene.strip()}'")
 
                 variant_keys = (
                     csq_base_request + f" AND {' AND '.join(additional_filters)}"
                 )
-
                 return_dict[base] = (
                     duckdb.sql(
                         f"SELECT * FROM '../Mneme/{base}/{chr}/variants/*.parquet' WHERE variant_key IN ({variant_keys})"
@@ -95,7 +93,6 @@ async def read_items(
                     .pl()
                     .to_dicts()
                 )
-
             else:
                 return_dict[base] = (
                     duckdb.sql(f"SELECT * {variant_request}").pl().to_dicts()
