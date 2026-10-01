@@ -23,6 +23,8 @@ async def read_items(
     chr: str,
     csq: Annotated[list[str] | None, Query()] = None,
     id: str = "",
+    impact: str = "",
+    feature: str = "",
     gene: str = "",
     start: int = 0,
     stop: int = 0,
@@ -34,7 +36,10 @@ async def read_items(
     return_dict = {}
     for base in variant_type:
         if os.path.isdir(f"../Mneme/{base}/{chr}"):
-            base_sql = f"SELECT * FROM '../Mneme/{base}/{chr}/*.parquet'"
+            # Variant selection
+            variant_base_sql = (
+                f"SELECT * FROM '../Mneme/{base}/{chr}/variants/*.parquet'"
+            )
             additional_filters = []
             if id != "":
                 additional_filters.append(f"id = '{id}'")
@@ -50,15 +55,18 @@ async def read_items(
             elif gnomad_regions:
                 additional_filters.append("notCoveredByGnomad = False")
 
-            print(base_sql + f" WHERE {' AND '.join(additional_filters)}")
             if additional_filters == []:
-                return_dict[base] = duckdb.sql(base_sql).pl().to_dicts()
+                variant_request = variant_base_sql
             else:
-                return_dict[base] = (
-                    duckdb.sql(base_sql + f" WHERE {' AND '.join(additional_filters)}")
-                    .pl()
-                    .to_dicts()
+                variant_request = (
+                    variant_base_sql + f" WHERE {' AND '.join(additional_filters)}"
                 )
+            print(variant_request)
+
+            if csq is not None or impact != "" or feature != "" or gene != "":
+                pass
+            else:
+                return_dict[base] = duckdb.sql(variant_request).pl().to_dicts()
         else:
             return_dict[base] = {}
     return [return_dict]
