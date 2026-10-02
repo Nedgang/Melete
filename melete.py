@@ -91,6 +91,9 @@ async def read_items(
                         f"SELECT * FROM '../Mneme/{base}/{chr}/variants/*.parquet' WHERE variant_key IN ({variant_keys})"
                     )
                     .pl()
+                    .with_columns(
+                        pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).round(4)
+                    )
                     .to_dicts()
                 )
             else:
