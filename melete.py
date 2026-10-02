@@ -108,7 +108,7 @@ async def read_items(
                     )
                 )
             # Check if results are in line with the limit of data.
-            if len(results_df) > 50:
+            if len(results_df) > 200:
                 raise HTTPException(
                     status_code=403,
                     detail=f"Request too open-ended, number of results > 200 in {base} request.",
