@@ -95,7 +95,12 @@ async def read_items(
                 )
             else:
                 return_dict[base] = (
-                    duckdb.sql(f"SELECT * {variant_request}").pl().to_dicts()
+                    duckdb.sql(f"SELECT * {variant_request}")
+                    .pl()
+                    .with_columns(
+                        pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).round(4)
+                    )
+                    .to_dicts()
                 )
         else:
             return_dict[base] = {}
