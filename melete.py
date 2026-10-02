@@ -6,7 +6,7 @@ from typing import Annotated
 
 import duckdb
 import polars as pl
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException
 
 ########
 # MAIN #
@@ -83,7 +83,7 @@ async def read_items(
                 if gene != "":
                     additional_filters.append(f"SYMBOL = '{gene.strip()}'")
 
-                return_dict[base] = (
+                results_df = (
                     duckdb.sql(
                         "SELECT * FROM '../Mneme/"
                         + base
@@ -98,17 +98,24 @@ async def read_items(
                     .with_columns(
                         pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).round(4)
                     )
-                    .to_dicts()
                 )
             else:
-                return_dict[base] = (
+                results_df = (
                     duckdb.sql(f"SELECT * {variant_request}")
                     .pl()
                     .with_columns(
                         pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).round(4)
                     )
-                    .to_dicts()
                 )
+            # Check if results are in line with the limit of data.
+            if len(results_df) > 50:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Request too open-ended, number of results > 200 in {base} request.",
+                )
+            else:
+                return_dict[base] = results_df.to_dicts()
+
         else:
             return_dict[base] = {}
     return [return_dict]
