@@ -83,12 +83,16 @@ async def read_items(
                 if gene != "":
                     additional_filters.append(f"SYMBOL = '{gene.strip()}'")
 
-                variant_keys = (
-                    csq_base_request + f" AND {' AND '.join(additional_filters)}"
-                )
                 return_dict[base] = (
                     duckdb.sql(
-                        f"SELECT * FROM '../Mneme/{base}/{chr}/variants/*.parquet' WHERE variant_key IN ({variant_keys})"
+                        "SELECT * FROM '../Mneme/"
+                        + base
+                        + "/"
+                        + chr
+                        + "/variants/*.parquet' WHERE variant_key IN ("
+                        + csq_base_request
+                        + f" AND {' AND '.join(additional_filters)}"
+                        + ")"
                     )
                     .pl()
                     .with_columns(
