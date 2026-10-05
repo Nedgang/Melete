@@ -17,7 +17,7 @@ app = FastAPI()
 #############
 # FUNCTIONS #
 #############
-@app.get("/query/")
+@app.get("/query/v1/variants")
 async def read_items(
     variant_type: Annotated[list[str] | None, Query()],
     chr: str,
