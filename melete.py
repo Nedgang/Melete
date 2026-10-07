@@ -135,7 +135,6 @@ async def find_variants(
                     )
                 )
             # Check if results are in line with the limit of data.
-            print(results_df)
             if len(results_df) > 200:
                 raise HTTPException(
                     status_code=403,
