@@ -43,7 +43,7 @@ async def find_variants(
                 additional_filters.append(f"id = '{id}'")
             if only_pass:
                 additional_filters.append("FILTER = 'PASS'")
-            if start != 0 and stop != 0:
+            if start != 0 or stop != 0:
                 additional_filters.append(f"pos BETWEEN {start} AND {stop}")
             # Those are linked, use the bigger one instead of multiple at the same time.
             if pass_gnomad:
@@ -59,6 +59,7 @@ async def find_variants(
                 variant_request = (
                     variant_base_sql + f" WHERE {' AND '.join(additional_filters)}"
                 )
+            print(variant_request)
 
             if (
                 csq is not None
@@ -96,6 +97,19 @@ async def find_variants(
                     )
                     .pl()
                     .with_columns(
+                        pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).replace(
+                            "None", None
+                        )
+                    )
+                    .cast(
+                        {
+                            "AF": pl.Float32,
+                            "AF_XY": pl.Float32,
+                            "AF_XX": pl.Float32,
+                            "AF_grpmax": pl.Float32,
+                        }
+                    )
+                    .with_columns(
                         pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).round(4)
                     )
                 )
@@ -104,10 +118,24 @@ async def find_variants(
                     duckdb.sql(f"SELECT * {variant_request}")
                     .pl()
                     .with_columns(
+                        pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).replace(
+                            "None", None
+                        )
+                    )
+                    .cast(
+                        {
+                            "AF": pl.Float32,
+                            "AF_XY": pl.Float32,
+                            "AF_XX": pl.Float32,
+                            "AF_grpmax": pl.Float32,
+                        }
+                    )
+                    .with_columns(
                         pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).round(4)
                     )
                 )
             # Check if results are in line with the limit of data.
+            print(results_df)
             if len(results_df) > 200:
                 raise HTTPException(
                     status_code=403,
