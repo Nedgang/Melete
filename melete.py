@@ -59,7 +59,6 @@ async def find_variants(
                 variant_request = (
                     variant_base_sql + f" WHERE {' AND '.join(additional_filters)}"
                 )
-            print(variant_request)
 
             if (
                 csq is not None
@@ -135,7 +134,6 @@ async def find_variants(
                     )
                 )
             # Check if results are in line with the limit of data.
-            print(results_df)
             if len(results_df) > 200:
                 raise HTTPException(
                     status_code=403,
