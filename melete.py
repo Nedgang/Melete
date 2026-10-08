@@ -83,56 +83,18 @@ async def find_variants(
                 if gene != "":
                     additional_filters.append(f"SYMBOL = '{gene.strip()}'")
 
-                results_df = (
-                    duckdb.sql(
-                        "SELECT * FROM '../Mneme/"
-                        + base
-                        + "/"
-                        + chr
-                        + "/variants/*.parquet' WHERE variant_key IN ("
-                        + csq_base_request
-                        + f" AND {' AND '.join(additional_filters)}"
-                        + ")"
-                    )
-                    .pl()
-                    .with_columns(
-                        pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).replace(
-                            "None", None
-                        )
-                    )
-                    .cast(
-                        {
-                            "AF": pl.Float32,
-                            "AF_XY": pl.Float32,
-                            "AF_XX": pl.Float32,
-                            "AF_grpmax": pl.Float32,
-                        }
-                    )
-                    .with_columns(
-                        pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).round(4)
-                    )
-                )
+                results_df = duckdb.sql(
+                    "SELECT * FROM '../Mneme/"
+                    + base
+                    + "/"
+                    + chr
+                    + "/variants/*.parquet' WHERE variant_key IN ("
+                    + csq_base_request
+                    + f" AND {' AND '.join(additional_filters)}"
+                    + ")"
+                ).pl()
             else:
-                results_df = (
-                    duckdb.sql(f"SELECT * {variant_request}")
-                    .pl()
-                    .with_columns(
-                        pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).replace(
-                            "None", None
-                        )
-                    )
-                    .cast(
-                        {
-                            "AF": pl.Float32,
-                            "AF_XY": pl.Float32,
-                            "AF_XX": pl.Float32,
-                            "AF_grpmax": pl.Float32,
-                        }
-                    )
-                    .with_columns(
-                        pl.col(["AF", "AF_XY", "AF_XX", "AF_grpmax"]).round(4)
-                    )
-                )
+                results_df = duckdb.sql(f"SELECT * {variant_request}").pl()
             # Check if results are in line with the limit of data.
             if len(results_df) > 200:
                 raise HTTPException(
