@@ -90,7 +90,6 @@ async def find_variants(
 
         else:
             return_dict[base] = {}
-        print(return_dict)
     return [return_dict]
 
 
