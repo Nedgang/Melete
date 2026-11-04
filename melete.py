@@ -91,21 +91,3 @@ async def find_variants(
         else:
             return_dict[base] = {}
     return [return_dict]
-
-
-@app.get("/query/v1/csq")
-async def find_csq(
-    variant_type: str,
-    chr: str,
-    variant_key: str,
-    features: Annotated[list[str] | None, Query()] = None,
-) -> list[dict]:
-    if os.path.isdir(f"../Mneme/{variant_type}/{chr}"):
-        request = f"SELECT * FROM '../Mneme/{variant_type}/{chr}/csq/*.parquet' WHERE variant_key = '{variant_key}'"
-        if features is not None:
-            request = (
-                request + f" AND Feature IN {tuple([i.strip() for i in features])}"
-            )
-        return duckdb.sql(request).pl().to_dicts()
-    else:
-        return [{}]
