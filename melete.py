@@ -35,77 +35,62 @@ async def find_variants(
 ) -> list[dict]:
     return_dict = {}
     for base in variant_type:
-        if os.path.isdir(f"../Mneme/{base}/{chr}"):
+        if os.path.isdir(f"../Mneme/{base}"):
             # Variant selection
-            variant_base_sql = f"FROM '../Mneme/{base}/{chr}/variants/*.parquet'"
+            variant_base_sql = (
+                f"SELECT * FROM '../Mneme/{base}/*.db' WHERE chrom = '{chr}'"
+            )
             additional_filters = []
+            # Filters on the variant info
             if id != "":
                 additional_filters.append(f"id = '{id}'")
             if only_pass:
                 additional_filters.append("FILTER = 'PASS'")
             if start != 0 or stop != 0:
                 additional_filters.append(f"pos BETWEEN {start} AND {stop}")
-            # Those are linked, use the bigger one instead of multiple at the same time.
+            # Those are linked, use the biggest one instead of multiple at the same time.
+            # Filters on the variant link to gnomAD
             if pass_gnomad:
                 additional_filters.append("passGnomad = True")
             elif in_gnomad:
                 additional_filters.append("inGnomad = True")
             elif gnomad_regions:
                 additional_filters.append("notCoveredByGnomad = False")
-
-            if additional_filters == []:
-                variant_request = variant_base_sql
-            else:
-                variant_request = (
-                    variant_base_sql + f" WHERE {' AND '.join(additional_filters)}"
+            # Filter on CSQ informations
+            if csq is not None:
+                additional_filters.append(
+                    f"csq_Consequence IN {tuple([i.strip() for i in csq])}"
                 )
+            if impact is not None:
+                additional_filters.append(
+                    f"csq_IMPACT IN {tuple([i.strip() for i in impact])}"
+                )
+            if feature is not None:
+                additional_filters.append(
+                    f"csq_Feature IN {tuple([i.strip() for i in feature])}"
+                )
+            if gene != "":
+                additional_filters.append(f"csq_SYMBOL = '{gene.strip()}'")
 
-            if (
-                csq is not None
-                or impact is not None
-                or feature is not None
-                or gene != ""
-            ):
-                csq_base_request = f"SELECT DISTINCT variant_key FROM '../Mneme/{base}/{chr}/csq/*.parquet' WHERE variant_key IN (SELECT variant_key {variant_request})"
-                additional_filters = []
-                if csq is not None:
-                    additional_filters.append(
-                        f"Consequence IN {tuple([i.strip() for i in csq])}"
-                    )
-                if impact is not None:
-                    additional_filters.append(
-                        f"IMPACT IN {tuple([i.strip() for i in impact])}"
-                    )
-                if feature is not None:
-                    additional_filters.append(
-                        f"Feature IN {tuple([i.strip() for i in feature])}"
-                    )
-                if gene != "":
-                    additional_filters.append(f"SYMBOL = '{gene.strip()}'")
-
-                results_df = duckdb.sql(
-                    "SELECT * FROM '../Mneme/"
-                    + base
-                    + "/"
-                    + chr
-                    + "/variants/*.parquet' WHERE variant_key IN ("
-                    + csq_base_request
-                    + f" AND {' AND '.join(additional_filters)}"
-                    + ")"
-                ).pl()
+            # Complete the basic request with additional filters
+            if additional_filters == []:
+                results_df = duckdb.sql(variant_base_sql).pl()
             else:
-                results_df = duckdb.sql(f"SELECT * {variant_request}").pl()
+                results_df = duckdb.sql(
+                    variant_base_sql + f" AND {' AND '.join(additional_filters)}"
+                ).pl()
             # Check if results are in line with the limit of data.
-            if len(results_df) > 200:
+            if len(results_df) > 100000:
                 raise HTTPException(
                     status_code=403,
-                    detail=f"Request too open-ended, number of results > 200 in {base} request.",
+                    detail=f"Request too open-ended, number of results > 100000 in {base} request.",
                 )
             else:
                 return_dict[base] = results_df.to_dicts()
 
         else:
             return_dict[base] = {}
+        print(return_dict)
     return [return_dict]
 
 
