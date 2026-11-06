@@ -99,10 +99,5 @@ async def find_variants(
                 }
 
         else:
-            answer[base] = {}
-            answer[base] = {
-                "warning": True,
-                "message": "No variants found for those parameters",
-                "results": [],
-            }
+            raise HTTPException(status_code=404, detail=f"{base} not found!!!")
     return answer
