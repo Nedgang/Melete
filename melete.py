@@ -32,8 +32,8 @@ async def find_variants(
     gnomad_regions: bool = False,
     in_gnomad: bool = False,
     pass_gnomad: bool = False,
-) -> list[dict]:
-    return_dict = {}
+) -> dict:
+    answer = {}
     for base in variant_type:
         if os.path.isdir(f"../Mneme/{base}"):
             # Variant selection
@@ -80,14 +80,29 @@ async def find_variants(
                     variant_base_sql + f" AND {' AND '.join(additional_filters)}"
                 ).pl()
             # Check if results are in line with the limit of data.
-            if len(results_df) > 100000:
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Request too open-ended, number of results > 100000 in {base} request.",
-                )
+            if len(results_df["variant_key"].unique()) > 100000:
+                answer[base] = {
+                    "warning": True,
+                    "message": f"""Number of found variants > 100k for {base} request.
+                    Only the first 100k will be showed.""",
+                    "results": results_df.filter(
+                        pl.col("variant_key").is_in(
+                            results_df["variant_key"].sort("pos").unique().head(100000)
+                        )
+                    ).to_dicts(),
+                }
             else:
-                return_dict[base] = results_df.to_dicts()
+                answer[base] = {
+                    "warning": False,
+                    "message": "",
+                    "results": results_df.to_dicts(),
+                }
 
         else:
-            return_dict[base] = {}
-    return [return_dict]
+            answer[base] = {}
+            answer[base] = {
+                "warning": True,
+                "message": "No variants found for those parameters",
+                "results": [],
+            }
+    return answer
