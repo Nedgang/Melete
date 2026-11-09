@@ -87,7 +87,10 @@ async def find_variants(
                     Only the first 100k will be showed.""",
                     "results": results_df.filter(
                         pl.col("variant_key").is_in(
-                            results_df["variant_key"].sort("pos").unique().head(100000)
+                            results_df.sort("pos")
+                            .select(pl.col("variant_key"))
+                            .unique()
+                            .head(100000)
                         )
                     ).to_dicts(),
                 }
