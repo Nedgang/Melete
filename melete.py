@@ -80,7 +80,16 @@ async def find_variants(
                     variant_base_sql + f" AND {' AND '.join(additional_filters)}"
                 ).pl()
             # Check if results are in line with the limit of data.
-            if len(results_df["variant_key"].unique()) > 100000:
+            if (
+                duckdb.sql(
+                    f"SELECT COUNT(DISTINCT variant_key) FROM '../Mneme/{base}/*.db' WHERE chrom = '{chr}'"
+                    + f" AND {' AND '.join(additional_filters)}"
+                )
+                .pl()
+                .to_series()
+                .to_list()[0]
+                > 100000
+            ):
                 answer[base] = {
                     "warning": True,
                     "message": f"""Number of found variants > 100k for {base} request.
