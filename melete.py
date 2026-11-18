@@ -4,7 +4,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.backend.endpoints import variants
+from src.backend.endpoints import consequences, variants
 
 ########
 # MAIN #
@@ -20,6 +20,7 @@ app.add_middleware(
 )
 
 app.include_router(variants.router)
+app.include_router(consequences.router)
 
 #############
 # FUNCTIONS #
