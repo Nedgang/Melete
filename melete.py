@@ -12,7 +12,8 @@ from src.backend.endpoints import consequences, variants
 app = FastAPI()
 
 # First middleware is the last to be applied to incomming request, and first to response.
-app.add_middleware(GZipMiddleware, minimum_size=1000)
+# GZip response bigger than minimum_size (default 500 bytes)
+app.add_middleware(GZipMiddleware)
 
 app.include_router(variants.router)
 app.include_router(consequences.router)
