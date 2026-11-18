@@ -1,4 +1,4 @@
 install:
-	pip install uv fastapi[standard] fastapi-middleware duckdb polars pyarrow
+	pip install uv fastapi[standard] duckdb polars pyarrow
 run:
 	uv run fastapi dev melete.py
